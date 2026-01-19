@@ -34,6 +34,9 @@ interface ProfileData {
   created_at: string | null;
   is_online: boolean | null;
   is_verified?: boolean;
+  mobile_number: string | null;
+  show_mobile: boolean | null;
+  show_location: boolean | null;
 }
 
 interface Post {
@@ -128,7 +131,7 @@ export default function Profile() {
         const followerIds = followersData.map(f => f.follower_id).filter(Boolean) as string[];
         const { data: followerProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, bio, location, created_at, is_online')
+          .select('id, full_name, username, avatar_url, bio, location, created_at, is_online, mobile_number, show_mobile, show_location')
           .in('id', followerIds);
         setFollowers(followerProfiles || []);
       } else {
@@ -145,7 +148,7 @@ export default function Profile() {
         const followingIds = followingData.map(f => f.following_id).filter(Boolean) as string[];
         const { data: followingProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, bio, location, created_at, is_online')
+          .select('id, full_name, username, avatar_url, bio, location, created_at, is_online, mobile_number, show_mobile, show_location')
           .in('id', followingIds);
         setFollowing(followingProfiles || []);
       } else {
@@ -277,9 +280,15 @@ export default function Profile() {
                         showNotVerified={false}
                       />
                     </h1>
-                    <p className="text-muted-foreground">
-                      @{profileData.username || 'user'}
-                    </p>
+                    {/* Only show username if it's not the mobile number, or if show_mobile is true */}
+                    {profileData.username && (
+                      profileData.show_mobile || 
+                      profileData.username !== profileData.mobile_number
+                    ) && (
+                      <p className="text-muted-foreground">
+                        @{profileData.username}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="flex gap-2">
@@ -325,7 +334,8 @@ export default function Profile() {
               )}
               
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {profileData.location && (
+                {/* Only show location if show_location is true (default to true if null) */}
+                {profileData.location && (profileData.show_location !== false) && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
                     {profileData.location}
@@ -448,9 +458,15 @@ function UserCard({ user }: { user: ProfileData }) {
               {user.full_name || 'Anonymous'}
               <VerificationBadge isVerified={!!user.is_verified} size="sm" />
             </p>
-            <p className="text-sm text-muted-foreground truncate">
-              @{user.username || 'user'}
-            </p>
+            {/* Only show username if it's not the mobile number, or if show_mobile is true */}
+            {user.username && (
+              user.show_mobile || 
+              user.username !== user.mobile_number
+            ) && (
+              <p className="text-sm text-muted-foreground truncate">
+                @{user.username}
+              </p>
+            )}
           </div>
           {user.is_online && (
             <div className="w-2 h-2 rounded-full bg-green-500" />

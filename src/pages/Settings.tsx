@@ -176,12 +176,19 @@ export default function Settings() {
   const handleSavePrivacy = async () => {
     setSavingPrivacy(true);
     try {
-      // Privacy columns need to be added via migration first
-      // For now, just show a toast
-      toast({ 
-        title: 'Privacy settings saved locally', 
-        description: 'Database migration needed for full functionality'
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          show_email: showEmail,
+          show_mobile: showMobile,
+          show_location: showLocation,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      toast({ title: 'Privacy settings saved!' });
     } catch (error: any) {
       toast({ title: 'Error updating privacy settings', description: error.message, variant: 'destructive' });
     } finally {
